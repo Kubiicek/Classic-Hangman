@@ -3,7 +3,7 @@ package model.entites;
 import java.io.*;
 import java.util.Scanner;
 
-public class Game implements Serializable {
+public class Game implements IGame, Serializable {
 	private static final long serialVersionUID = 1L;
 	private static final int MAX_ATTEMPS = 6;
 	private static int attemps = 6;
@@ -17,6 +17,7 @@ public class Game implements Serializable {
 		player = new Player();
 	}
 
+	@Override
 	public void start() {
 		Scanner scanner = new Scanner(System.in);
 		currentWord = wordList.getRandomWord();
@@ -109,15 +110,16 @@ public class Game implements Serializable {
 		return currentWord.equals(new String(currentGuess));
 	}
 	
+	@Override
 	public void saveGame(String filename) throws IOException {
 		try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(filename))) {
 			out.writeObject(this);
 		}
 	}
 	
-	public static Game loadGame(String filename) throws IOException, ClassNotFoundException {
+	public static IGame loadGame(String filename) throws IOException, ClassNotFoundException {
 		try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(filename))) {
-			return (Game) in.readObject();
+			return (IGame) in.readObject();
 		}
 	}
 }
