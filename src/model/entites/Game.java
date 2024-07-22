@@ -108,4 +108,16 @@ public class Game implements Serializable {
 	private boolean isWin() {
 		return currentWord.equals(new String(currentGuess));
 	}
+	
+	public void saveGame(String filename) throws IOException {
+		try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(filename))) {
+			out.writeObject(this);
+		}
+	}
+	
+	public static Game loadGame(String filename) throws IOException, ClassNotFoundException {
+		try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(filename))) {
+			return (Game) in.readObject();
+		}
+	}
 }
