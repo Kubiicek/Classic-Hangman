@@ -1,11 +1,15 @@
 package main;
 
-import model.entites.Game;
-import model.entites.IGame;
+import javax.swing.SwingUtilities;
+
+import model.entites.GameGUI;
 
 public class Application {
 	public static void main(String[] args) {
-		IGame game = new Game();
-		game.start();
-	}
+        SwingUtilities.invokeLater(Application::createAndShowGUI);
+    }
+	
+	private static void createAndShowGUI() {
+        new GameGUI();
+    }
 }

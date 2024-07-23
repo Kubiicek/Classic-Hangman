@@ -1,125 +1,105 @@
 package model.entites;
 
 import java.io.*;
-import java.util.Scanner;
+import java.util.*;
+
+import javax.swing.JOptionPane;
 
 public class Game implements IGame, Serializable {
-	private static final long serialVersionUID = 1L;
-	private static final int MAX_ATTEMPS = 6;
-	private static int attemps = 6;
-	private WordList wordList;
-	private Player player;
-	private String currentWord;
-	private char[] currentGuess;
+    private static final long serialVersionUID = 1L;
+    private static final int MAX_ATTEMPTS = 6;
+    private WordList wordList;
+    private Player player;
+    private String currentWord;
+    private char[] currentGuess;
 
-	public Game() {
-		wordList = new WordList();
-		player = new Player();
-	}
+    public Game() {
+        wordList = new WordList();
+        player = new Player();
+    }
 
-	@Override
-	public void start() {
-		Scanner scanner = new Scanner(System.in);
-		currentWord = wordList.getRandomWord();
-		currentGuess = new char[currentWord.length()];
-		for (int i = 0; i < currentGuess.length; i++) {
-			currentGuess[i] = '_';
-		}
+    @Override
+    public void start() {
+        currentWord = wordList.getRandomWord();
+        if (currentWord != null) {
+            currentGuess = new char[currentWord.length()];
+            Arrays.fill(currentGuess, '_');
+        } else {
+            currentGuess = new char[0];
+        }
+    }
 
-		while (!isGameOver()) {
-			System.out.println("Current guess: " + new String(currentGuess));
-			System.out.println("You have " + attemps + " Attemps");
-			System.out.println("Do you want to guess a (L)etter or the (W)ord?");
-			String choice = scanner.nextLine().toUpperCase();
+    public void guessLetter(char guess) {
+        if (player.hasTriedLetter(guess)) {
+            JOptionPane.showMessageDialog(null, "Você já tentou essa letra.");
+            return;
+        } else {
+            player.addTriedLetter(guess);
+            checkLetter(guess);
+        }
+    }
 
-			switch (choice) {
-			case "L" -> guessLetter(scanner);
-			case "W" -> guessWord(scanner);
-			default -> System.out.println("Invalid choice. Please enter 'L' for letter or 'W' for word.");
-			}
-		}
+    public void guessWord(String guess) {
+        if (player.hasTriedWord(guess)) {
+            JOptionPane.showMessageDialog(null, "Você já tentou essa palavra.");
+            return;
+        } else {
+            player.addTriedWord(guess);
+            checkWord(guess);
+        }
+    }
 
-		if (isWin()) {
-			System.out.println("Congratulations You've guessed the word: " + currentWord);
-		} else {
-			System.out.println("Game over! The word was: " + currentWord);
-		}
-	}
+    private void checkLetter(char guess) {
+        boolean found = false;
+        for (int i = 0; i < currentWord.length(); i++) {
+            if (currentWord.charAt(i) == guess) {
+                currentGuess[i] = guess;
+                found = true;
+            }
+        }
+        if (!found) {
+            player.incrementMistakes();
+        }
+    }
 
-	private void guessLetter(Scanner scanner) {
-		System.out.println("Enter a letter:");
-		String input = scanner.nextLine().toLowerCase();
-		if (input.length() != 1) {
-			System.out.println("Please enter a single letter.");
-			return;
-		}
-		char guess = input.charAt(0);
-		if (player.hasTriedLetter(guess)) {
-			System.out.println("You already tried that letter.");
-		} else {
-			player.addTriedLetter(guess);
-			checkLetter(guess);
-		}
-	}
+    private void checkWord(String guess) {
+        if (currentWord.equals(guess)) {
+            currentGuess = currentWord.toCharArray();
+        } else {
+            player.incrementMistakes();
+        }
+    }
 
-	private void guessWord(Scanner scanner) {
-		System.out.println("Enter the word:");
-		String input = scanner.nextLine().toLowerCase();
-		if (input.length() != currentWord.length()) {
-			System.out.println("The word length doesn't match.");
-			return;
-		}
-		if (player.hasTriedWord(input)) {
-			System.out.println("You already tried that word.");
-		} else {
-			player.addTriedWord(input);
-			checkWord(input);
-		}
-	}
+    public boolean isGameOver() {
+        return isWin() || player.getMistakes() >= MAX_ATTEMPTS;
+    }
 
-	private void checkLetter(char guess) {
-		boolean found = false;
-		for (int i = 0; i < currentWord.length(); i++) {
-			if (currentWord.charAt(i) == guess) {
-				currentGuess[i] = guess;
-				found = true;
-			}
-		}
-		if (!found) {
-			player.incrementMistakes();
-			attemps--;
-			System.out.println("You have " + attemps + " Attemps");
-		}
-	}
+    public boolean isWin() {
+        return currentWord.equals(new String(currentGuess));
+    }
 
-	private void checkWord(String guess) {
-		if (currentWord.equals(guess)) {
-			currentGuess = currentWord.toCharArray();
-		} else {
-			player.incrementMistakes();
-			attemps--;
-			System.out.println("You have " + attemps + " Attemps");
-		}
-	}
+    @Override
+    public void saveGame(String filename) throws IOException {
+        try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(filename))) {
+            out.writeObject(this);
+        }
+    }
 
-	private boolean isGameOver() {
-		return isWin() || player.getMistakes() >= MAX_ATTEMPS;
-	}
+    public static Game loadGame(String filename) throws IOException, ClassNotFoundException {
+        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(filename))) {
+            return (Game) in.readObject();
+        }
+    }
 
-	private boolean isWin() {
-		return currentWord.equals(new String(currentGuess));
-	}
-	
-	@Override
-	public void saveGame(String filename) throws IOException {
-		try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(filename))) {
-			out.writeObject(this);
-		}
-	}
-	
-	public static IGame loadGame(String filename) throws IOException, ClassNotFoundException {
-		try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(filename))) {
-			return (IGame) in.readObject();
-		}
-	}
+    public char[] getCurrentGuess() {
+        return currentGuess;
+    }
+
+    public String getCurrentWord() {
+        return currentWord;
+    }
+
+    public Player getPlayer() {
+        return player;
+    }
 }
