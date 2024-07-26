@@ -11,6 +11,7 @@ import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -20,7 +21,7 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.Timer;
 
-public class GameGUI extends JFrame {
+public class GameGuiEN extends JFrame {
     private Game game;
     private JLabel currentGuessLabel;
     private JLabel messageLabel;
@@ -28,7 +29,7 @@ public class GameGUI extends JFrame {
     private JPanel keyboardPanel;
     private JLabel attemptsLabel;
 
-    public GameGUI() {
+    public GameGuiEN() {
         try {
             game = Game.loadGame("saved_game.dat");
         } catch (IOException | ClassNotFoundException e) {
@@ -39,10 +40,10 @@ public class GameGUI extends JFrame {
     }
 
     private void initializeUI() {
-        setTitle("Jogo da Forca");
+        setTitle("Hangman");
         setSize(600, 400);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLayout(new BorderLayout());
+        getContentPane().setLayout(new BorderLayout());
 
         addWindowListener(new WindowAdapter() {
             @Override
@@ -56,18 +57,18 @@ public class GameGUI extends JFrame {
         });
 
         JPanel topPanel = new JPanel(new BorderLayout());
-        currentGuessLabel = createLabel("Palavra: " + new String(game.getCurrentGuess()), 24);
-        messageLabel = createLabel("Bem-vindo ao Jogo da Forca!", 18);
-        attemptsLabel = createLabel("Tentativas restantes: " + (6 - game.getPlayer().getMistakes()), 18);
+        currentGuessLabel = createLabel("Word: " + new String(game.getCurrentGuess()), 24);
+        messageLabel = createLabel("Welcome to Hangman!", 18);
+        attemptsLabel = createLabel("Attempts remaining: " + (6 - game.getPlayer().getMistakes()), 18);
         topPanel.add(currentGuessLabel, BorderLayout.NORTH);
         topPanel.add(messageLabel, BorderLayout.CENTER);
         topPanel.add(attemptsLabel, BorderLayout.SOUTH);
 
-        JPanel inputPanel = new JPanel(new BorderLayout());
+        JPanel inputPanel = new JPanel();
         inputField = new JTextField(1);
-        JButton guessLetterButton = new JButton("Chutar Letra");
-        JButton guessWordButton = new JButton("Chutar Palavra");
-        JButton resetButton = new JButton("Reiniciar Jogo");
+        JButton guessLetterButton = new JButton("Guess letter");
+        JButton guessWordButton = new JButton("Guess word");
+        JButton resetButton = new JButton("Restart game");
         guessLetterButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -86,18 +87,19 @@ public class GameGUI extends JFrame {
                 resetGame();
             }
         });
+        inputPanel.setLayout(new BoxLayout(inputPanel, BoxLayout.X_AXIS));
         JPanel wordGuessPanel = new JPanel(new BorderLayout());
         wordGuessPanel.add(inputField, BorderLayout.CENTER);
         wordGuessPanel.add(guessWordButton, BorderLayout.EAST);
-        inputPanel.add(wordGuessPanel, BorderLayout.NORTH);
-        inputPanel.add(guessLetterButton, BorderLayout.CENTER);
-        inputPanel.add(resetButton, BorderLayout.SOUTH);
+        inputPanel.add(wordGuessPanel);
+        inputPanel.add(guessLetterButton);
+        inputPanel.add(resetButton);
 
         keyboardPanel = createKeyboardPanel();
 
-        add(topPanel, BorderLayout.NORTH);
-        add(inputPanel, BorderLayout.SOUTH);
-        add(keyboardPanel, BorderLayout.CENTER);
+        getContentPane().add(topPanel, BorderLayout.NORTH);
+        getContentPane().add(inputPanel, BorderLayout.SOUTH);
+        getContentPane().add(keyboardPanel, BorderLayout.CENTER);
 
         setVisible(true);
     }
@@ -113,7 +115,7 @@ public class GameGUI extends JFrame {
         for (char c = 'a'; c <= 'z'; c++) {
             final char letter = c;
             JButton button = new JButton(String.valueOf(letter));
-            button.setFont(new Font("Arial", Font.PLAIN, 16));
+            button.setFont(new Font("Arial", Font.PLAIN, 18));
             button.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -130,7 +132,7 @@ public class GameGUI extends JFrame {
         if (input.length() == 1) {
             guessLetter(input.charAt(0));
         } else {
-            JOptionPane.showMessageDialog(this, "Por favor, insira uma única letra.");
+            JOptionPane.showMessageDialog(this, "Please enter a single letter.");
         }
         inputField.setText("");
     }
@@ -142,20 +144,25 @@ public class GameGUI extends JFrame {
 
     private void guessWord() {
         String input = inputField.getText().toLowerCase();
+        if (input.isEmpty()) {
+        	JOptionPane.showMessageDialog(this, "Do not leave it blank.", "Warning",
+        			JOptionPane.WARNING_MESSAGE);
+        	return;
+        }
         game.guessWord(input);
         updateUI();
         inputField.setText("");
     }
 
     private void updateUI() {
-        currentGuessLabel.setText("Palavra: " + new String(game.getCurrentGuess()));
-        attemptsLabel.setText("Tentativas restantes: " + (6 - game.getPlayer().getMistakes()));
+        currentGuessLabel.setText("Word: " + new String(game.getCurrentGuess()));
+        attemptsLabel.setText("Attempts remaining: " + (6 - game.getPlayer().getMistakes()));
 
         if (game.isGameOver()) {
             if (game.isWin()) {
-                messageLabel.setText("Parabéns! Você acertou a palavra!");
+                messageLabel.setText("Congratulations! You guessed the word!");
             } else {
-                messageLabel.setText("Fim de jogo! A palavra era: " + game.getCurrentWord());
+                messageLabel.setText("Game over! The word was: " + game.getCurrentWord());
             }
             
             Timer timer = new Timer(2000, new ActionListener() {
@@ -185,15 +192,6 @@ public class GameGUI extends JFrame {
             }
         }
         inputField.setEnabled(true);
-        messageLabel.setText("Novo jogo iniciado!");
-    }
-    
-    private void disableButtons() {
-        for (Component comp : keyboardPanel.getComponents()) {
-            if (comp instanceof JButton) {
-                comp.setEnabled(false);
-            }
-        }
-        inputField.setEnabled(false);
+        messageLabel.setText("New game started");
     }
 }

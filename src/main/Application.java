@@ -1,15 +1,21 @@
 package main;
 
-import javax.swing.SwingUtilities;
+import java.awt.EventQueue;
 
-import model.entites.GameGUI;
+import model.entites.JLanguage;
 
 public class Application {
 	public static void main(String[] args) {
-        SwingUtilities.invokeLater(Application::createAndShowGUI);
-    }
-	
-	private static void createAndShowGUI() {
-        new GameGUI();
-    }
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				try {
+					JLanguage frame = new JLanguage();
+					frame.setLocationRelativeTo(null);
+					frame.setVisible(true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}
 }
